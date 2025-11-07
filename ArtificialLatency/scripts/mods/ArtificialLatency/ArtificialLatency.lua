@@ -15,6 +15,8 @@ local scope_reflection_timing_sfx = RenegadeSniperActions.shoot.scope_reflection
 
 local Quaternion = Quaternion
 
+local GameModeSettings = require("scripts/settings/game_mode/game_mode_settings")
+
 local MILLISECONDS_TO_SECONDS = 0.001
 
 mod.settings = mod:persistent_table("settings")
@@ -50,10 +52,26 @@ end
 
 local is_server = function ()
     local game_session = Managers.state.game_session
-    if not game_session then
+
+    if game_session then
+        return game_session:is_server()
+    end
+
+    local game_mode_manager = Managers.state.game_mode
+
+    if not game_mode_manager then
         return false
     end
-    return game_session:is_server()
+
+    local game_mode_name = game_mode_manager:game_mode_name() 
+
+    if not game_mode_name then
+        return false
+    end
+
+    local gm_settings = GameModeSettings[game_mode_name]
+
+    return gm_settings and gm_settings.host_singleplay == true or false
 end
 
 local set_player_props = function ()
